@@ -4,7 +4,7 @@
 
 #include <SDL_rect.h>
 #include <stdbool.h>
-#include "../DataStructures/LinkedList.h"
+#include "../Utils/LinkedList.h"
 #include "../Sprites/Sprite.h"
 
 struct SpaceRect {
@@ -22,7 +22,9 @@ void free_rect(void *data);
 void buildBlockMatrix(struct Block *block);
 void createBlock(struct Block *block, int xPos);
 void generateShields(struct LinkedList *shields);
-bool collision(struct SDL_Rect *rect, struct Bullet *bullet);
+bool collisionA(struct SDL_Rect *rect, struct Alien *alien);
+bool collisionB(struct SDL_Rect *rect, struct Bullet *bullet);
+void collisionAlienBlock(struct LinkedList *aliens, struct LinkedList *shields);
 void searchCollision(struct LinkedList *bullets, struct LinkedList *shields);
 void deleteRect(struct Block *block, int i, int j);
 

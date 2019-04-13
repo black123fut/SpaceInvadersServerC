@@ -18,14 +18,17 @@ void setAttributes(struct Alien *alien, int column, int index, int row) {
     if (row == 0) {
         alien->x = 16 + column * 60;
         alien->width = 24;
+        alien->score = 40;
     }
     else if (row == 1 || row == 2) {
         alien->x = 11 + column * 60;
         alien->width = 33;
+        alien->score = 20;
     }
     else {
         alien->x = 10 + column * 60;
         alien->width = 35;
+        alien->score = 10;
     }
 
     alien->height = 24;
@@ -76,12 +79,20 @@ void getAliens(SDL_Renderer *renderer, struct LinkedList *aliens) {
     printf("LLEgue");
 }
 
-bool checkCollision(struct Bullet *bullet, struct Alien* alien) {
+bool checkCollisionAlien(struct Bullet *bullet, struct Alien* alien) {
     return
             (bullet->x) < (alien->x + alien->width) &&
             (bullet->y) < (alien->y + alien->height) &&
             (bullet->x + bullet->width) > (alien->x) &&
             (bullet->y + bullet->height) > (alien->y);
+}
+
+bool checkCollisionPlayer(struct Bullet *bullet, Player *pl) {
+    return
+            (bullet->x) < (pl->x + pl->width) &&
+            (bullet->y) < (pl->y + pl->height) &&
+            (bullet->x + bullet->width) > (pl->x) &&
+            (bullet->y + bullet->height) > (pl->y);
 }
 
 SDL_Renderer *init() {

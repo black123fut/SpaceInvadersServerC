@@ -2,7 +2,7 @@
 #define SPACEINVADERS_SPRITE_H
 
 #include "SDL2/SDL_image.h"
-#include "../DataStructures/LinkedList.h"
+#include "../Utils/LinkedList.h"
 
 typedef struct _Player {
     int x;
@@ -34,6 +34,7 @@ struct Alien {
     int row;
     int index;
     int currentSprite;
+    int score;
     SDL_Texture *sheet;
 } ;
 

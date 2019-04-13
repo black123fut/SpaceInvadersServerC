@@ -45,7 +45,15 @@ void createBlock(struct Block *block, int xPos) {
 //    printf("size: %i", block->shield->size);
 }
 
-bool collision(struct SDL_Rect *rect, struct Bullet *bullet) {
+bool collisionA(struct SDL_Rect *rect, struct Alien *alien) {
+    return
+            (alien->x) < (rect->x + rect->w) &&
+            (alien->y) < (rect->y + rect->h) &&
+            (alien->x + alien->width) > (rect->x) &&
+            (alien->y + alien->height) > (rect->y);
+}
+
+bool collisionB(struct SDL_Rect *rect, struct Bullet *bullet) {
     return
             (bullet->x) < (rect->x + rect->w) &&
             (bullet->y) < (rect->y + rect->h) &&
@@ -63,12 +71,30 @@ void searchCollision(struct LinkedList *bullets, struct LinkedList *shields) {
 
                 for (int k = 0; k < length(bullets); ++k) {
                     struct Bullet *tmpbullet = *(struct Bullet **) get(bullets, k);
-                    if (collision(srect->rect, tmpbullet)) {
+                    if (collisionB(srect->rect, tmpbullet)) {
                         deleteRect(tmp, srect->i, srect->j);
                         delete_node(tmp->shield, j, "Rect");
                         delete_node(bullets, k, "Bullet");
                         break;
                     }
+                }
+            }
+        }
+    }
+}
+
+void collisionAlienBlock(struct LinkedList *aliens, struct LinkedList *shields) {
+    for (int k = 0; k < length(aliens); ++k) {
+        struct Alien *alien = *(struct Alien **) get(aliens, k);
+
+        for (int i = 0; i < length(shields); ++i) {
+            struct Block *block = *(struct Block **) get(shields, i);
+
+            for (int j = 0; j < length(block->shield); ++j) {
+                struct SpaceRect *srect = *(struct SpaceRect **) get(block->shield, j);
+                if (collisionA(srect->rect, alien)) {
+                    deleteRect(block, srect->i, srect->j);
+                    delete_node(block->shield, j, "Rect");
                 }
             }
         }

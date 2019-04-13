@@ -12,18 +12,19 @@
 
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
-#include "DataStructures/LinkedList.h"
+#include "Utils/LinkedList.h"
 #include "Sprites/Block.h"
 #include "Sprites/Sprite.h"
-#include "DataStructures/Utilities.h"
+#include "Utils/Utilities.h"
 #include "Conectividad/Ssocket.h"
 #include "JsonBuilder/JsonConstructor.h"
 
 
-int globalTime = 0, border = 10, speed = 1, isObserver;
+int globalTime = 0, border = 10, alieny = 75, speed = 1, isObserver;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 const int puerto = 8080;
 Player pl;
+struct game_info game;
 struct LinkedList *clients;
 struct LinkedList *aliens;
 struct LinkedList *bullets;
@@ -31,7 +32,7 @@ struct LinkedList *shields;
 SDL_Renderer *renderer;
 
 int n = 0;
-bool isServer = true, playerConnected = false, serverConnected = false;
+bool isServer = true, playerConnected = false, serverConnected = false, lose = false;
 
 struct client_info {
     int sockno;
@@ -40,6 +41,7 @@ struct client_info {
 
 void handler(int s) {
     printf("Caught SIGPIPE\n");
+    exit(1);
 }
 
 void updateServer(Player *pl, struct LinkedList *aliens,
@@ -49,7 +51,6 @@ void updateServer(Player *pl, struct LinkedList *aliens,
                   const char *buffer) {
 
     int goDown = 0;
-
     if (isServer)
         changeSpriteAliens(aliens, &globalTime);
 
@@ -81,7 +82,21 @@ void updateServer(Player *pl, struct LinkedList *aliens,
         struct Alien *tmp = *(struct Alien **) get(aliens, i);
         tmp->x += speed;
         tmp->y += 40 * goDown;
+        if (tmp->y >= 650)
+            lose = true;
     }
+
+    if (goDown == 1)
+        alieny += 40 * goDown;
+
+    if (alieny == 155) {
+        if (speed < 0)
+            speed--;
+        else
+            speed++;
+        alieny = 75;
+    }
+
 
     //Mueve balas y Balas fueras del limite
     for (int k = 0; k < length(bullets); ++k) {
@@ -94,28 +109,43 @@ void updateServer(Player *pl, struct LinkedList *aliens,
     }
 
     //Colisiones
-    if (bullets->size > 0) {
+    if (bullets->size > 0 && length(aliens) > 0) {
         for (int l = 0; l < aliens->size; ++l) {
             struct Alien *alientmp = *(struct Alien **) get(aliens, l);
             for (int i = 0; i < length(bullets); ++i) {
-
                 struct Bullet *bullettmp = *(struct Bullet **) get(bullets, i);
-                if (bullettmp->direction == -1 && checkCollision(bullettmp, alientmp)) {
+
+                if (bullettmp->direction == -1 && checkCollisionAlien(bullettmp, alientmp)) {
                     delete_node(bullets, i, "Player Bullet");
+                    game.score += alientmp->score;
                     delete_node(aliens, l, "Alien");
+                }
+                else if (bullettmp->direction == 1 && checkCollisionPlayer(bullettmp, pl)) {
+                    delete_node(bullets, i, "Player Bullet");
+                    game.lifes--;
                 }
             }
         }
     }
 
+//    if (length(aliens) == 0) {
+//        getAliens(renderer, aliens);
+//        speed = 1;
+//    }
+
+    if (game.lifes == 0) {
+        lose = true;
+    }
+
     //Destruccion de los escudos
-    if (bullets->size > 0) {
+    if (bullets->size > 0 && length(aliens) > 0) {
         searchCollision(bullets, shields);
+        collisionAlienBlock(aliens, shields);
     }
 }
 
 void updatePlayer(Player *pl, struct LinkedList *bullets,
-                const char *buffer) {
+                const char *buffer, struct game_info *game) {
     int typeRes;
     //Json---------------------------------------------
     struct json_object *parsed_json;
@@ -124,6 +154,8 @@ void updatePlayer(Player *pl, struct LinkedList *bullets,
     struct json_object *temp_jug;
     struct json_object *balas;
     struct json_object *bala;
+    struct json_object *score;
+    struct json_object *vidas;
 
     parsed_json = json_tokener_parse(buffer);
 
@@ -132,6 +164,12 @@ void updatePlayer(Player *pl, struct LinkedList *bullets,
     if (typeRes == 0) {
         json_object_object_get_ex(parsed_json,"Player", &jugador);
         json_object_object_get_ex(parsed_json,"Bullets", &balas);
+        json_object_object_get_ex(parsed_json,"Score", &score);
+        json_object_object_get_ex(parsed_json,"Vidas", &vidas);
+
+        game->score = json_object_get_int(score);
+        game->lifes = json_object_get_int(vidas);
+
 
         json_object_object_get_ex(jugador,"x",&temp_jug);
         pl->x = json_object_get_int(temp_jug);
@@ -183,12 +221,13 @@ void *send_to_observer(void *sock) {
 
     while (1) {
         json_object *jobj = json_object_new_object();
-        typeClient(0, jobj);
+        stateJson(lose, jobj);
+        typeClient(1, jobj);
+        gameInfoJson(&game, jobj);
         playerJson(&pl, jobj);
         aliensJson(aliens, jobj);
         bulletsJson(bullets, jobj);
         blocksJson(shields, jobj);
-        speedJson(speed, jobj);
 
         char const *mensaje = json_object_to_json_string(jobj);
 
@@ -244,12 +283,13 @@ void *send_to_cplayer(void *sock) {
         ///////////////// Crea el mensaje |||||||||||||||||||||||||
 
         json_object *jobj = json_object_new_object();
+        stateJson(lose, jobj);
+        gameInfoJson(&game, jobj);
         typeClient(0, jobj);
         playerJson(&pl, jobj);
         aliensJson(aliens, jobj);
         bulletsJson(bullets, jobj);
         blocksJson(shields, jobj);
-        speedJson(speed, jobj);
 
         // --------------------------------------------------------
 
@@ -327,7 +367,7 @@ void *send_to_cplayer(void *sock) {
         // ----------------------------------------------------------
 
         if (!isObserver)
-            updatePlayer(&pl, bullets, buffer);
+            updatePlayer(&pl, bullets, buffer, &game);
 
         SDL_Delay(50);
     }
@@ -357,6 +397,7 @@ int main(int argc, char* args[]) {
     isServer = true;
     isObserver = 0;
 
+    game = (struct game_info) {3, 0};
     aliens = (struct LinkedList *) malloc(sizeof(struct LinkedList));
     getAliens(renderer, aliens);
 

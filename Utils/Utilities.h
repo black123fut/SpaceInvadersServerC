@@ -7,7 +7,14 @@
 #include "LinkedList.h"
 #include "../Sprites/Sprite.h"
 
-bool checkCollision(struct Bullet *bullet, struct Alien* alien);
+struct game_info {
+    int lifes;
+    int score;
+};
+
+bool checkCollisionAlien(struct Bullet *bullet, struct Alien* alien);
+
+bool checkCollisionPlayer(struct Bullet *bullet, Player *pl);
 
 SDL_Surface *loadImage(char* path);
 

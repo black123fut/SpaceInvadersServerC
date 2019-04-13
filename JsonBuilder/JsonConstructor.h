@@ -3,12 +3,14 @@
 
 #include <stdio.h>
 #include "../Sprites/Block.h"
-#include "../DataStructures/Utilities.h"
+#include "../Utils/Utilities.h"
 #include "../Sprites/Sprite.h"
-#include "../DataStructures/LinkedList.h"
+#include "../Utils/LinkedList.h"
 #include <jmorecfg.h>
 #include <json-c/json.h>
 
+void stateJson(bool lose, json_object *jobj);
+void gameInfoJson(struct game_info *game, json_object *jobj);
 void typeClient(int type, json_object *jobj);
 void playerJson(Player *pl, json_object *jobj);
 void bulletsJson(struct LinkedList *blocks, json_object *jobj);

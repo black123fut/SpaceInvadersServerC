@@ -12,11 +12,11 @@ find_package(SDL2_IMAGE)
 find_package(SDL2TTF)
 find_package(SDL2Mixer)
 
-add_executable(SpaceInvadersServer main.c DataStructures/LinkedList.c
-                                    DataStructures/LinkedList.h
+add_executable(SpaceInvadersServer main.c Utils/LinkedList.c
+                                    Utils/LinkedList.h
                                     Sprites/Sprite.h
-                                    DataStructures/Utilities.h
-                                    DataStructures/Utilities.c
+                                    Utils/Utilities.h
+                                    Utils/Utilities.c
                                     Sprites/Block.h Sprites/Block.c
                                     Sprites/Sprite.c
                                     JsonBuilder/JsonConstructor.h

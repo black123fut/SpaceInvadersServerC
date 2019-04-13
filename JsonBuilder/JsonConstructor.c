@@ -1,4 +1,10 @@
 #include "JsonConstructor.h"
+#include "../Utils/Utilities.h"
+
+void gameInfoJson(struct game_info *game, json_object *jobj) {
+    json_object_object_add(jobj,"Vidas", json_object_new_int(game->lifes));
+    json_object_object_add(jobj,"Score", json_object_new_int(game->score));
+}
 
 void typeClient(int type, json_object *jobj) {
     json_object_object_add(jobj,"Client", json_object_new_int(type));
@@ -6,6 +12,14 @@ void typeClient(int type, json_object *jobj) {
 
 void speedJson(int speed, json_object *jobj) {
     json_object_object_add(jobj,"GlobalSpeed", json_object_new_int(speed));
+}
+
+void stateJson(bool lose, json_object *jobj) {
+    if (lose) {
+        json_object_object_add(jobj,"State", json_object_new_int(1));
+    }
+    else
+        json_object_object_add(jobj,"State", json_object_new_int(0));
 }
 
 void playerJson(Player *pl, json_object *jobj) {
