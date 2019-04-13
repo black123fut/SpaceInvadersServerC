@@ -49,6 +49,7 @@ void delete_node(struct LinkedList *list, int index, char *tag) {
         }
         free(tmp->data);
         free(tmp);
+        tmp = NULL;
         list->size--;
         return;
     }
@@ -63,6 +64,7 @@ void delete_node(struct LinkedList *list, int index, char *tag) {
             }
             free(tmpp->data);
             free(tmpp);
+            tmpp = NULL;
             list->size--;
             return;
         }
@@ -111,5 +113,6 @@ void list_destroy(struct LinkedList *list)
         }
         free(current->data);
         free(current);
+        current = NULL;
     }
 }

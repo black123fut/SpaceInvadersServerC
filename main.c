@@ -44,6 +44,9 @@ void handler(int s) {
     exit(1);
 }
 
+/**
+ * Actualiza la logica del juego.
+ */
 void updateServer(Player *pl, struct LinkedList *aliens,
                   struct LinkedList *bullets,
                   struct LinkedList *shields,
@@ -128,10 +131,10 @@ void updateServer(Player *pl, struct LinkedList *aliens,
         }
     }
 
-//    if (length(aliens) == 0) {
-//        getAliens(renderer, aliens);
-//        speed = 1;
-//    }
+    if (length(aliens) == 0) {
+        getAliens(renderer, aliens);
+        speed = 1;
+    }
 
     if (game.lifes == 0) {
         lose = true;
@@ -144,6 +147,9 @@ void updateServer(Player *pl, struct LinkedList *aliens,
     }
 }
 
+/**
+ * Actualiza los datos de los struct con lo que envia el jugador.
+ */
 void updatePlayer(Player *pl, struct LinkedList *bullets,
                 const char *buffer, struct game_info *game) {
     int typeRes;
@@ -213,6 +219,9 @@ void updatePlayer(Player *pl, struct LinkedList *bullets,
     }
 }
 
+/**
+ * Envia los datos al observador.
+ */
 void *send_to_observer(void *sock) {
     struct client_info client = *((struct client_info *) sock);
     char buffer[12000];
@@ -267,6 +276,9 @@ void *send_to_observer(void *sock) {
     }
 }
 
+/**
+ * Envia al jugador la logica del servidor.
+ */
 void *send_to_cplayer(void *sock) {
     struct client_info client = *((struct client_info *) sock);
     char buffer[12000];
